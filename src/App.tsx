@@ -29,6 +29,34 @@ export const App: React.FC = () => {
       .finally(() => setIsLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!selectedTodo) {
+      setSelectedUser(null);
+
+      return;
+    }
+
+    let isCurrentRequest = true;
+
+    setSelectedUser(null);
+
+    getUser(selectedTodo.userId)
+      .then(user => {
+        if (isCurrentRequest) {
+          setSelectedUser(user);
+        }
+      })
+      .catch(() => {
+        if (isCurrentRequest) {
+          setError('Could not load user details');
+        }
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [selectedTodo]);
+
   const visibleTodos = todos.filter(todo => {
     const matchesStatus =
       status === 'all' ||
@@ -41,16 +69,7 @@ export const App: React.FC = () => {
   });
 
   const handleShowMore = (todo: Todo) => {
-    setSelectedTodo(todo);
-    setSelectedUser(null);
-
-    getUser(todo.userId)
-      .then(user => {
-        setSelectedUser(user);
-      })
-      .catch(() => {
-        setError('Could not load user details');
-      });
+    setSelectedTodo(prev => (prev?.id === todo.id ? null : todo));
   };
 
   return (
